@@ -32,11 +32,11 @@ return [
     ],
 
     'telegram-bot-api' => [
-        'token' => env('TELEGRAM_BOT_TOKEN', '5953728308:AAH9dyZMQld5O-U45aD9RPIadI5y21C4yXk')
+        'token' => env('TELEGRAM_BOT_TOKEN', '')
     ],
 
     'wb-bot-api' => [
-        'token' => env('WB_BOT_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6IjUwNjRmMDUzLTA5ZDctNDllZS1iMzE0LTA3MGIzMzZmNWEzYiJ9.Sv0-TJiVdkCYh9MuimOuT9aUQczwKdVS3aDG7ZSBGFs')
+        'token' => env('WB_BOT_TOKEN', '')
     ],
 
 ];
