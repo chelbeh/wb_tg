@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\WbOrdersController;
 use App\Notifications\SendTGNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 
 class SendMessageTG extends Command
 {
@@ -32,24 +32,32 @@ class SendMessageTG extends Command
      */
     public function handle()
     {
+        $time = date('Y-m-d\TH:i:s\Z', time() - 86400);
         $wbOrders = (new WbOrdersController)
-            ->find(date('Y-m-d\TH:i:s\Z', time() - 10800))
+            ->find($time)
             ->collect()
             ->filter(fn($order) => $order['isCancel'] === false);
 
         if ($wbOrders->isEmpty()) {
+            Log::warning($time);
             Log::warning('tg:msg no Orders');
             $this->warn('tg:msg no orders!');
             return Command::SUCCESS;
         }
 
-        $msg = 'Поступил новый заказ https://seller.wildberries.ru/marketplace-orders-new/new-tasks/to-warehouse';
+        foreach ($wbOrders as $wbOrder) {
+            if (!Redis::exists('wb_gNumber_' . $wbOrder['gNumber'])) {
+                Redis::set('wb_gNumber_' . $wbOrder['gNumber'], true);
+                $msg = "Поступил новый заказ - " . $wbOrder['gNumber'] . " https://seller.wildberries.ru/marketplace-orders-new/new-tasks/to-warehouse";
 
-        Notification::route('telegram', 'TELEGRAM_CHAT_ID')
-            ->notify(new SendTGNotification($msg));
+                Notification::route('telegram', 'TELEGRAM_CHAT_ID')
+                    ->notify(new SendTGNotification($msg));
+            }
+        }
+
         $this->info('tg:msg works!');
         Log::info('tg:msg works');
-
+        Log::info($time, $wbOrders->toArray());
         return Command::SUCCESS;
     }
 }
