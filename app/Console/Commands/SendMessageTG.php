@@ -5,9 +5,9 @@ namespace App\Console\Commands;
 use App\Http\Controllers\WbOrdersController;
 use App\Notifications\SendTGNotification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Redis;
 
 class SendMessageTG extends Command
 {
@@ -46,8 +46,10 @@ class SendMessageTG extends Command
         }
 
         foreach ($wbOrders as $wbOrder) {
-            if (!Redis::exists('wb_gNumber_' . $wbOrder['gNumber'])) {
-                Redis::set('wb_gNumber_' . $wbOrder['gNumber'], true);
+            $insert = DB::table('orders')->insertOrIgnore([
+                ['order_number' => $wbOrder['gNumber']]
+            ]);
+            if ($insert) {
                 $msg = "Поступил новый заказ - " . $wbOrder['gNumber'] . " https://seller.wildberries.ru/marketplace-orders-new/new-tasks/to-warehouse";
 
                 Notification::route('telegram', 'TELEGRAM_CHAT_ID')
